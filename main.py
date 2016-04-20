@@ -8,6 +8,8 @@ from initialize import *
 from event_handler import EventHandler
 from frame_rate_handler import *
 
+from game_board import *
+
 def main():
 	initialize()
 	eventHandler = EventHandler()
@@ -16,7 +18,7 @@ def main():
 	backColor = Color(0, 0, 0)
 	mainSurface = pygame.display.set_mode((720, 720))
 
-
+	gameBoard = GameBoard(0, 0, eventHandler, mainSurface)
 
 	while True:
 		frameRateHandler.updateStart()
@@ -25,8 +27,10 @@ def main():
 		if eventHandler.quit or eventHandler.keys.release[K_ESCAPE]:
 			break
 
+		gameBoard.update()
 
 		mainSurface.fill(backColor)
+		gameBoard.draw()
 
 		pygame.display.flip()
 

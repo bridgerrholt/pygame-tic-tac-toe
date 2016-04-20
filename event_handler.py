@@ -102,6 +102,7 @@ class EventHandler:
 		self.quit = False
 
 		self.keys.clear()
+		self.mouse.clear()
 
 		for event in pygame.event.get():
 			if event.type == QUIT:
