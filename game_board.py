@@ -32,7 +32,12 @@ class GameBoard(object):
 		self.playerFirst = 1
 		self.playerTurn = self.playerFirst
 
-		self.font = pygame.font.SysFont("arial", 30)
+		self.font = pygame.font.SysFont("arial", 200)
+		self.winFont = pygame.font.SysFont("arial", 100)
+
+		self.screen = 0
+		self.over = False
+		self.winner = 0
 
 
 
@@ -55,40 +60,79 @@ class GameBoard(object):
 
 
 	def update(self):
-		mouseX, mouseY = self.eventHandler.mouse.x, self.eventHandler.mouse.y
+		if self.screen == 0:
+			mouseX, mouseY = self.eventHandler.mouse.x, self.eventHandler.mouse.y
 
-		if (mouseX >= self.x and mouseX <= self.linePositions[0][2]) or \
-		   (mouseY >= self.y and mouseY <= self.linePositions[1][2]):
-			tileX, tileY = 0, 0
+			if (mouseX >= self.x and mouseX <= self.linePositions[0][2]) or \
+			   (mouseY >= self.y and mouseY <= self.linePositions[1][2]):
+				tileX, tileY = 0, 0
 
-			if mouseY < self.linePositions[1][0]:
-				tileY = 0
-			elif mouseY < self.linePositions[1][1]:
-				tileY = 1
-			else:
-				tileY = 2
-
-			if mouseX < self.linePositions[0][0]:
-				tileX = 0
-			elif mouseX < self.linePositions[0][1]:
-				tileX = 1
-			else:
-				tileX = 2
-
-			self.squareHover = (True, (tileY, tileX))
-
-		else:
-			self.squareHover = (False, (0, 0))
-
-		if self.squareHover[0] and self.eventHandler.mouse.left.release:
-			if self.squares[self.squareHover[1][0]][self.squareHover[1][1]] == 0:
-				self.squares[self.squareHover[1][0]][self.squareHover[1][1]] = self.playerTurn
-
-				if self.playerTurn == 1:
-					self.playerTurn = 2
+				if mouseY < self.linePositions[1][0]:
+					tileY = 0
+				elif mouseY < self.linePositions[1][1]:
+					tileY = 1
 				else:
-					self.playerTurn = 1
+					tileY = 2
 
+				if mouseX < self.linePositions[0][0]:
+					tileX = 0
+				elif mouseX < self.linePositions[0][1]:
+					tileX = 1
+				else:
+					tileX = 2
+
+				self.squareHover = (True, (tileY, tileX))
+
+			else:
+				self.squareHover = (False, (0, 0))
+
+			if self.squareHover[0] and self.eventHandler.mouse.left.release:
+				if self.squares[self.squareHover[1][0]][self.squareHover[1][1]] == 0:
+					self.squares[self.squareHover[1][0]][self.squareHover[1][1]] = self.playerTurn
+
+					self.checkWin()
+					if self.over:
+						self.screen = 1
+						print "ay"
+
+					if self.playerTurn == 1:
+						self.playerTurn = 2
+					else:
+						self.playerTurn = 1
+		else:
+			if self.eventHandler.mouse.left.release:
+				if self.screen == 1:
+					self.over = False
+					self.winner = 0
+					self.squareHover = (False, (0, 0))
+					self.playerTurn = self.playerFirst
+					for i in range(len(self.squares)):
+						for j in range(len(self.squares[i])):
+							self.squares[i][j] = 0
+					self.screen = 2
+				else:
+					self.screen = 0
+
+	def checkWin(self):
+		for i in range(1, 3):
+			for j in range(0, 3):
+				if self.squares[j][0] == i and self.squares[j][1] == i and self.squares[j][2] == i:
+					self.over = True
+					self.winner = i
+					break
+				elif self.squares[0][j] == i and self.squares[1][j] == i and self.squares[2][j] == i:
+					self.over = True
+					self.winner = i
+					break
+
+			if self.over:
+				break
+
+			if (self.squares[0][0] == i and self.squares[1][1] == i and self.squares[2][2] == i) or \
+			   (self.squares[2][0] == i and self.squares[1][1] == i and self.squares[0][2] == i):
+				self.over = True
+				self.winner = i
+				break
 
 
 	def drawSquares(self):
@@ -111,16 +155,22 @@ class GameBoard(object):
 				pygame.draw.rect(self.mainSurface, color, rect)
 
 				if square != 0:
-					if square == self.playerFirst:
-						toBlit = self.font.render("O", True, self.lineColor)
-					else:
-						toBlit = self.font.render("X", True, self.lineColor)
-					self.mainSurface.blit(toBlit, rect)
+					self.drawMarker(square, (rect.x, rect.y))
 
 				x += 1
 
 			y += 1
 			x  = 0
+
+	def drawMarker(self, square, pos):
+		if square == self.playerFirst:
+			toBlit = self.font.render("O", True, self.lineColor)
+		else:
+			toBlit = self.font.render("X", True, self.lineColor)
+		pos = (
+			pos[0] + self.squareSideLength/2.0 - toBlit.get_width()/2.0,
+			pos[1] + self.squareSideLength/2.0 - toBlit.get_height()/2.0)
+		self.mainSurface.blit(toBlit, pos)
 
 
 
@@ -128,25 +178,32 @@ class GameBoard(object):
 		pygame.draw.rect(self.mainSurface, self.backColor,
 			(self.x, self.y, self.fullLength, self.fullLength))
 
-		self.drawSquares()
+		if self.screen != 2:
+			self.drawSquares()
 
-		# Horizontal lines.
-		pygame.draw.line(self.mainSurface, self.lineColor,
-			(self.x,                   self.linePositions[1][0]),
-			(self.linePositions[0][2], self.linePositions[1][0]), self.lineThickness)
+			# Horizontal lines.
+			pygame.draw.line(self.mainSurface, self.lineColor,
+				(self.x,                   self.linePositions[1][0]),
+				(self.linePositions[0][2], self.linePositions[1][0]), self.lineThickness)
 
-		pygame.draw.line(self.mainSurface, self.lineColor,
-			(self.x,                   self.linePositions[1][1]),
-			(self.linePositions[0][2], self.linePositions[1][1]), self.lineThickness)
+			pygame.draw.line(self.mainSurface, self.lineColor,
+				(self.x,                   self.linePositions[1][1]),
+				(self.linePositions[0][2], self.linePositions[1][1]), self.lineThickness)
 
-		# Vertical lines.
-		pygame.draw.line(self.mainSurface, self.lineColor,
-			(self.linePositions[0][0], self.y),
-			(self.linePositions[0][0], self.linePositions[1][2]), self.lineThickness)
+			# Vertical lines.
+			pygame.draw.line(self.mainSurface, self.lineColor,
+				(self.linePositions[0][0], self.y),
+				(self.linePositions[0][0], self.linePositions[1][2]), self.lineThickness)
 
-		pygame.draw.line(self.mainSurface, self.lineColor,
-			(self.linePositions[0][1], self.y),
-			(self.linePositions[0][1], self.linePositions[1][2]), self.lineThickness)
+			pygame.draw.line(self.mainSurface, self.lineColor,
+				(self.linePositions[0][1], self.y),
+				(self.linePositions[0][1], self.linePositions[1][2]), self.lineThickness)
+
+		else:
+			toBlit = self.winFont.render("Player " + str(self.winner) + " wins!", True, self.lineColor)
+			self.mainSurface.blit(toBlit, (
+				self.mainSurface.get_width()/2.0 - toBlit.get_width()/2.0,
+				100))
 
 
 
