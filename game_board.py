@@ -44,6 +44,20 @@ class GameBoard(object):
 
 		self.computerPause = 0
 
+		# Contains counts for the player markers in each row and column
+		# [x][y][z] count
+		# x         player
+		# y         0: row, 1: column
+		# z         index
+		self.counts = []
+		for i in range(2):
+			self.counts.append([])
+			for j in range(2):
+				self.counts[i].append([])
+				for k in range(3):
+					self.counts[i][j].append(0)
+		print self.counts
+
 
 
 	def setPoints(self):
@@ -62,6 +76,11 @@ class GameBoard(object):
 			 self.y + self.squareSideLength*3]
 		]
 
+
+	def setTo(self, x, y, player):
+		self.squares[x][y] = player
+		self.counts[player-1][0][x] += 1
+		self.counts[player-1][1][y] += 1
 
 
 	def update(self):
@@ -96,7 +115,7 @@ class GameBoard(object):
 
 				if self.squareHover[0] and self.eventHandler.mouse.left.release:
 					if self.squares[self.squareHover[1][0]][self.squareHover[1][1]] == 0:
-						self.squares[self.squareHover[1][0]][self.squareHover[1][1]] = self.playerTurn
+						self.setTo(self.squareHover[1][0], self.squareHover[1][1], self.playerTurn)
 						played = True
 
 			elif time.time() > self.computerPause:
@@ -131,19 +150,76 @@ class GameBoard(object):
 					self.winner = 0
 					self.screen = 0
 
+	def checkPossibleWin(self, player):
+		counts = self.counts[player-1]
+		for i in range(len(counts)):
+			for j in range(len(counts[i])):
+				if counts[i][j] == 2:
+					if i == 0:
+						for k in range(len(self.squares[j])):
+							if self.squares[j][k] == 0:
+								return (j, k)
+					else:
+						for k in range(3):
+							if self.squares[k][j] == 0:
+								return (k, j)
+
+		diagnalCount = 0
+		diagnal = []
+		for i in range(3):
+			if self.squares[i][i] == player:
+				diagnalCount += 1
+			diagnal.append(self.squares[i][i])
+		print "diagnal: "
+		print diagnal
+
+		if diagnalCount == 2:
+			for i in range(3):
+				if diagnal[i] == 0:
+					return (i, i)
+
+
+
+
+		diagnalCount = 0
+		diagnal = []
+		for i in range(3):
+			if self.squares[i][2-i] == player:
+				diagnalCount += 1
+			diagnal.append(self.squares[i][2-i])
+
+		if diagnalCount == 2:
+			for i in range(3):
+				if diagnal[i] == 0:
+					return (i, 2-i)
+
+
+
+		return False
+
+
 	def computerTurn(self):
+
+		computerWin = self.checkPossibleWin(self.playerTurn)
+		print computerWin
+		if computerWin != False:
+			self.setTo(computerWin[0], computerWin[1], self.playerTurn)
+			return
+
+		playerWin = self.checkPossibleWin(1)
+		print playerWin
+		if playerWin != False:
+			self.setTo(playerWin[0], playerWin[1], self.playerTurn)
+			return
+
+
 		emptySlots = []
 		for i in range(len(self.squares)):
 			for j in range(len(self.squares[i])):
 				if self.squares[i][j] == 0:
 					emptySlots.append((i, j))
 
-		# Counts player markers.
-		counts = [
-			[0, 0, 0],  # rows
-			[0, 0, 0]   # columns
-		]
-		for i in range(len(self.squares)):
+		"""for i in range(len(self.squares)):
 			for j in range(len(self.squares[i])):
 				if self.squares[i][j] == 1:
 					counts[0][i] += 1
@@ -159,18 +235,26 @@ class GameBoard(object):
 								self.squares[j][k] = self.playerTurn
 								played = True
 								break
+					else:
+						for k in range(3):
+							if self.squares[k][j] == 0:
+								self.squares[k][j] = self.playerTurn
+								played = True
+								break
+
 
 				if played: break
-			if played: break
+			if played: break"""
 
 
 
 
-		print counts
+		#print counts
 
 
-		index = random.randrange(len(emptySlots))
-		self.squares[emptySlots[index][0]][emptySlots[index][1]] = self.playerTurn
+		if not False:
+			index = random.randrange(len(emptySlots))
+			self.setTo(emptySlots[index][0], emptySlots[index][1], self.playerTurn)
 
 	def checkWin(self):
 		emptyCount = 0
