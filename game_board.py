@@ -50,13 +50,32 @@ class GameBoard(object):
 		# y         0: row, 1: column
 		# z         index
 		self.counts = []
+		self.reset()
+		print self.counts
+
+
+	def reset(self):
+		self.counts = []
 		for i in range(2):
 			self.counts.append([])
 			for j in range(2):
 				self.counts[i].append([])
 				for k in range(3):
 					self.counts[i][j].append(0)
-		print self.counts
+
+		self.over = False
+		self.squareHover = (False, (0, 0))
+		self.playerTurn = self.playerFirst
+		for i in range(len(self.squares)):
+			for j in range(len(self.squares[i])):
+				self.squares[i][j] = 0
+
+		if self.playerFirst == 1:
+			self.playerFirst = 2
+		else:
+			self.playerFirst = 1
+
+
 
 
 
@@ -124,12 +143,17 @@ class GameBoard(object):
 
 
 			if played:
-				print self.squares
-				print self.playerTurn
+				print "Board:"
+				for i in self.squares:
+					print i
+				print "Counts:"
+				for i in self.counts:
+					print i
+				print
 				self.checkWin()
 				if self.over:
 					self.screen = 1
-					print "ay"
+					print "Player", self.playerTurn, "wins!"
 
 				if self.playerTurn == 1:
 					self.playerTurn = 2
@@ -139,12 +163,7 @@ class GameBoard(object):
 		else:
 			if self.eventHandler.mouse.left.release:
 				if self.screen == 1:
-					self.over = False
-					self.squareHover = (False, (0, 0))
-					self.playerTurn = self.playerFirst
-					for i in range(len(self.squares)):
-						for j in range(len(self.squares[i])):
-							self.squares[i][j] = 0
+					self.reset()
 					self.screen = 2
 				else:
 					self.winner = 0
@@ -170,7 +189,7 @@ class GameBoard(object):
 			if self.squares[i][i] == player:
 				diagnalCount += 1
 			diagnal.append(self.squares[i][i])
-		print "diagnal: "
+		print "Diagnal 1 count:", diagnalCount
 		print diagnal
 
 		if diagnalCount == 2:
@@ -187,6 +206,8 @@ class GameBoard(object):
 			if self.squares[i][2-i] == player:
 				diagnalCount += 1
 			diagnal.append(self.squares[i][2-i])
+		print "Diagnal 2 count:", diagnalCount
+		print diagnal
 
 		if diagnalCount == 2:
 			for i in range(3):
@@ -200,14 +221,16 @@ class GameBoard(object):
 
 	def computerTurn(self):
 
+		print "Computer:"
 		computerWin = self.checkPossibleWin(self.playerTurn)
-		print computerWin
+		print "Can win:", computerWin
 		if computerWin != False:
 			self.setTo(computerWin[0], computerWin[1], self.playerTurn)
 			return
 
+		print "Player:"
 		playerWin = self.checkPossibleWin(1)
-		print playerWin
+		print "Can win:", playerWin
 		if playerWin != False:
 			self.setTo(playerWin[0], playerWin[1], self.playerTurn)
 			return
