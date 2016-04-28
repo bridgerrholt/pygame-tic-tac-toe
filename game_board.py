@@ -28,6 +28,12 @@ class GameBoard(object):
 
 		self.setPoints()
 
+		# [0, 2]
+		# 0: Completely random choices.
+		# 1: Finds possible wins
+		# 2: Smarter choices
+		self.difficulty = 1
+
 		# (True if hovering over a square,
 		#  index of said square)
 		self.squareHover = (False, (0, 0))
@@ -169,7 +175,9 @@ class GameBoard(object):
 					self.winner = 0
 					self.screen = 0
 
-	def checkPossibleWin(self, player):
+	def checkPossibleWins(self, player):
+		possibleWins = []
+
 		counts = self.counts[player-1]
 		for i in range(len(counts)):
 			for j in range(len(counts[i])):
@@ -177,11 +185,11 @@ class GameBoard(object):
 					if i == 0:
 						for k in range(len(self.squares[j])):
 							if self.squares[j][k] == 0:
-								return (j, k)
+								possibleWins.append((j, k))
 					else:
 						for k in range(3):
 							if self.squares[k][j] == 0:
-								return (k, j)
+								possibleWins.append((k, j))
 
 		diagnalCount = 0
 		diagnal = []
@@ -195,7 +203,7 @@ class GameBoard(object):
 		if diagnalCount == 2:
 			for i in range(3):
 				if diagnal[i] == 0:
-					return (i, i)
+					possibleWins.append((i, i))
 
 
 
@@ -212,29 +220,35 @@ class GameBoard(object):
 		if diagnalCount == 2:
 			for i in range(3):
 				if diagnal[i] == 0:
-					return (i, 2-i)
+					possibleWins.append((i, 2-i))
 
+		print "Possible wins:"
+		print possibleWins
 
+		possibleWinSize = len(possibleWins)
+		if possibleWinSize > 0:
+			print "Can win"
+			index = random.randrange(possibleWinSize)
+			self.setTo(possibleWins[index][0], possibleWins[index][1], 2)
+			return True
+
+		print "Can't win"
 
 		return False
 
 
 	def computerTurn(self):
+		if self.difficulty > 0:
+			print "Computer:"
+			if self.checkPossibleWins(2):
+				return
 
-		print "Computer:"
-		computerWin = self.checkPossibleWin(self.playerTurn)
-		print "Can win:", computerWin
-		if computerWin != False:
-			self.setTo(computerWin[0], computerWin[1], self.playerTurn)
-			return
+			print "Player:"
+			if self.checkPossibleWins(1):
+				return
 
-		print "Player:"
-		playerWin = self.checkPossibleWin(1)
-		print "Can win:", playerWin
-		if playerWin != False:
-			self.setTo(playerWin[0], playerWin[1], self.playerTurn)
-			return
-
+		if self.difficulty > 1:
+			pass
 
 		emptySlots = []
 		for i in range(len(self.squares)):
