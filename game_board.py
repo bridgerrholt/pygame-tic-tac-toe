@@ -41,8 +41,8 @@ class GameBoard(object):
 		self.playerFirst = 1
 		self.playerTurn = self.playerFirst
 
-		self.font = pygame.font.SysFont("arial", 200)
-		self.winFont = pygame.font.SysFont("arial", 100)
+		self.font = pygame.font.SysFont("arial", int(self.squareSideLength*0.8))
+		self.winFont = pygame.font.SysFont("arial", int(self.squareSideLength*0.4))
 
 		self.screen = 0
 		self.over = False
@@ -115,7 +115,7 @@ class GameBoard(object):
 			played = False
 
 			if self.playerTurn == 1:
-				if (mouseX >= self.x and mouseX <= self.linePositions[0][2]) or \
+				if (mouseX >= self.x and mouseX <= self.linePositions[0][2]) and \
 				   (mouseY >= self.y and mouseY <= self.linePositions[1][2]):
 					tileX, tileY = 0, 0
 
@@ -405,8 +405,8 @@ class GameBoard(object):
 
 			toBlit = self.winFont.render(text, True, self.lineColor)
 			self.mainSurface.blit(toBlit, (
-				self.mainSurface.get_width()/2.0 - toBlit.get_width()/2.0,
-				100))
+				self.x + self.mainSurface.get_width()/2.0 - toBlit.get_width()/2.0,
+				self.y + 100))
 
 
 

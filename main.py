@@ -15,10 +15,14 @@ def main():
 	eventHandler = EventHandler()
 	frameRateHandler = FrameRateHandler(60)
 
+	squareSize = 100
+	totalSize = squareSize*3
+	offsetY = squareSize
+	offsetX = 0
 	backColor = Color(0, 0, 0)
-	mainSurface = pygame.display.set_mode((720, 720))
+	mainSurface = pygame.display.set_mode((totalSize+offsetX, totalSize+offsetY))
 
-	gameBoard = GameBoard(0, 0, eventHandler, mainSurface)
+	gameBoard = GameBoard(0, offsetY, eventHandler, mainSurface)
 
 	while True:
 		frameRateHandler.updateStart()
